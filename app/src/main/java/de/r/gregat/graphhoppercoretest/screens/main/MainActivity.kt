@@ -7,11 +7,23 @@ import de.r.gregat.graphhoppercoretest.R
 import de.r.gregat.graphhoppercoretest.screens.common.BaseActivity
 
 class MainActivity : BaseActivity() {
+
+    private var viewMvc: MainActivityMvcView? = null
+    private var controller: MainActivityController? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
 
-        val graphHopper: GraphHopper = GraphHopper()
+        viewMvc = getControllerCompositionRoot()
+            ?.getViewMvcFactory()
+            ?.newInstance(
+                MainActivityMvcView::class.java,
+                null)
+
+        controller = getControllerCompositionRoot()
+            ?.getMainActivityController()
+
+        setContentView(viewMvc?.getRootView())
 
     }
 }

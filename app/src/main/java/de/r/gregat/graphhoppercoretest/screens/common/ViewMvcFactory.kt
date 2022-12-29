@@ -7,7 +7,7 @@ import de.r.gregat.graphhoppercoretest.screens.main.MainActivityMvcViewImpl
 
 class ViewMvcFactory(private val layoutInflater: LayoutInflater) {
 
-    fun <T : ViewMvc?> newInstance(mvcViewClass: Class<T>, container: ViewGroup): T? {
+    fun <T : ViewMvc?> newInstance(mvcViewClass: Class<T>?, container: ViewGroup?): T? {
         var viewMvc: ViewMvc? = null
 
         if (mvcViewClass == MainActivityMvcView::class.java) {

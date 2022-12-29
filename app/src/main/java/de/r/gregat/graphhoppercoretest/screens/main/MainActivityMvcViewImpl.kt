@@ -6,14 +6,23 @@ import de.r.gregat.graphhoppercoretest.databinding.ActivityMainBinding
 import de.r.gregat.graphhoppercoretest.screens.common.BaseObservableViewMvc
 
 
-class MainActivityMvcViewImpl(private val layoutInflater: LayoutInflater, private val container: ViewGroup):
+class MainActivityMvcViewImpl(private val layoutInflater: LayoutInflater, private val container: ViewGroup?):
     BaseObservableViewMvc<MainActivityMvcView.EventListener>(), MainActivityMvcView {
 
-    val binding: ActivityMainBinding = ActivityMainBinding
+    private val binding: ActivityMainBinding = ActivityMainBinding
         .inflate(
             layoutInflater,
             container,
             false)
 
 
+    init {
+        setRootView(binding.root)
+
+        binding.button.setOnClickListener {
+            getListeners().forEach {
+                it.selectPbf()
+            }
+        }
+    }
 }

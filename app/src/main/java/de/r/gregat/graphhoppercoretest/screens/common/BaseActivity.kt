@@ -20,7 +20,7 @@ open class BaseActivity: AppCompatActivity() {
         return activityCompositionRoot
     }
 
-    protected fun getCompositionRoot(): ControllerCompositionRoot? {
+    protected fun getControllerCompositionRoot(): ControllerCompositionRoot? {
         if (controllerCompositionRoot == null) {
             controllerCompositionRoot = ControllerCompositionRoot(getActivityCompositionRoot()!!)
         }

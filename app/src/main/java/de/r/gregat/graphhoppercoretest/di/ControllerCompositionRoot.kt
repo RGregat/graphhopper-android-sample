@@ -4,9 +4,7 @@ import android.content.Context
 import android.view.LayoutInflater
 import androidx.fragment.app.FragmentActivity
 import de.r.gregat.graphhoppercoretest.screens.common.ViewMvcFactory
-
-
-
+import de.r.gregat.graphhoppercoretest.screens.main.MainActivityController
 
 
 class ControllerCompositionRoot(private val activityCompositionRoot: ActivityCompositionRoot) {
@@ -25,5 +23,9 @@ class ControllerCompositionRoot(private val activityCompositionRoot: ActivityCom
 
     fun getViewMvcFactory(): ViewMvcFactory {
         return ViewMvcFactory(getLayoutInflater())
+    }
+
+    fun getMainActivityController(): MainActivityController {
+        return MainActivityController(getFragmentActivity())
     }
 }
