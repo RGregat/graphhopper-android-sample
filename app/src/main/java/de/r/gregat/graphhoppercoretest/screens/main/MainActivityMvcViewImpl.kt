@@ -23,9 +23,15 @@ class MainActivityMvcViewImpl(
     init {
         setRootView(binding.root)
 
-        binding.button.setOnClickListener {
+        binding.btnSelectPbf.setOnClickListener {
             getListeners().forEach {
                 it.selectPbf()
+            }
+        }
+
+        binding.btnCreateGraphhopperInstance.setOnClickListener {
+            getListeners().forEach {
+                it.createGraphhopperInstance()
             }
         }
     }
@@ -36,5 +42,13 @@ class MainActivityMvcViewImpl(
 
     override fun copyProcessDone() {
         binding.tvFileCopyProcessAnnotation.text = "PBF File successfully copied to external App Storage."
+    }
+
+    override fun startCreateGraphhopperInstanceProcess() {
+        binding.tvCreateGraphhopperInstanceAnnotation.text = "Creating a new Graphhopper instance..."
+    }
+
+    override fun createGraphhopperInstanceDone() {
+        binding.tvCreateGraphhopperInstanceAnnotation.text = "Successfully created a new Graphhopper instance."
     }
 }

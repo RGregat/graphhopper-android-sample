@@ -8,7 +8,13 @@ interface MainActivityMvcView: ObservableViewMvc<MainActivityMvcView.EventListen
 
     fun copyProcessDone()
 
+    fun startCreateGraphhopperInstanceProcess()
+
+    fun createGraphhopperInstanceDone()
+
     interface EventListener {
         fun selectPbf()
+
+        fun createGraphhopperInstance()
     }
 }

@@ -1,23 +1,23 @@
 package de.r.gregat.graphhoppercoretest.screens.main
 
-import android.content.Intent
-import android.net.Uri
-import android.provider.DocumentsContract
-import androidx.core.app.ActivityCompat.startActivityForResult
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import com.graphhopper.GraphHopper
+import com.graphhopper.config.CHProfile
+import com.graphhopper.config.Profile
 import de.r.gregat.graphhoppercoretest.utils.BackgroundThreadHelper
 import de.r.gregat.graphhoppercoretest.utils.UiThreadHelper
 import de.r.gregat.graphhoppercoretest.utils.io.FileSelectionEntryPoint
 import de.r.gregat.graphhoppercoretest.utils.io.SelectFileParams
 import de.r.gregat.graphhoppercoretest.utils.io.StorageAccessFrameworkInteractor
+import java.io.File
 import java.io.FileDescriptor
 import java.io.FileInputStream
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.nio.file.StandardCopyOption
+import kotlin.io.path.absolutePathString
 
 class MainActivityController(
     private val fragmentActivity: FragmentActivity,
@@ -27,8 +27,8 @@ class MainActivityController(
     MainActivityMvcView.EventListener,
     FileSelectionEntryPoint {
 
-    lateinit var viewMvc: MainActivityMvcView
-    lateinit var graphHopper: GraphHopper
+    private lateinit var viewMvc: MainActivityMvcView
+    private lateinit var graphHopper: GraphHopper
 
     fun bindViewMvc(view: MainActivityMvcView) {
         this.viewMvc = view
@@ -51,7 +51,7 @@ class MainActivityController(
         StorageAccessFrameworkInteractor(this)
 
 
-    fun onSelectFileClick(selectFileParams: SelectFileParams) =
+    private fun onSelectFileClick(selectFileParams: SelectFileParams) =
         fileSelectionInteractor.beginSelectingFile(selectFileParams)
 
     override fun onFileSelected(fileDescriptor: FileDescriptor?) {
@@ -78,8 +78,39 @@ class MainActivityController(
     }
 
 
-    fun createGraphhopperInstance() {
-        graphHopper = GraphHopper()
+    override fun createGraphhopperInstance() {
+        viewMvc.startCreateGraphhopperInstanceProcess()
+
+        backgroundThreadHelper.post {
+            try {
+                graphHopper = GraphHopper()
+
+                val externalAppStorageRoot = fragmentActivity.getExternalFilesDir(null)
+                val graphopperCacheFolder = File(externalAppStorageRoot, "graphhopper")
+                val path = Paths.get(externalAppStorageRoot?.path, "osm.pbf")
+
+                graphHopper.osmFile = path.absolutePathString();
+                // specify where to store graphhopper files
+                graphHopper.graphHopperLocation = graphopperCacheFolder.absolutePath
+
+                // see docs/core/profiles.md to learn more about profiles
+                graphHopper.setProfiles(
+                    Profile("car").setVehicle("car").setWeighting("fastest").setTurnCosts(false)
+                )
+
+                // this enables speed mode for the profile we called car
+                graphHopper.chPreparationHandler.setCHProfiles(CHProfile("car"))
+
+                // now this can take minutes if it imports or a few seconds for loading of course this is dependent on the area you import
+                graphHopper.importOrLoad()
+            } catch (_: Exception) {
+
+            } finally {
+                uiThreadHelper.post {
+                    viewMvc.createGraphhopperInstanceDone()
+                }
+            }
+        }
 
     }
 }
