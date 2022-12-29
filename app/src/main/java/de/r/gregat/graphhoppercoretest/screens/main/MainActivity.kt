@@ -1,9 +1,6 @@
 package de.r.gregat.graphhoppercoretest.screens.main
 
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import com.graphhopper.GraphHopper
-import de.r.gregat.graphhoppercoretest.R
 import de.r.gregat.graphhoppercoretest.screens.common.BaseActivity
 
 class MainActivity : BaseActivity() {
@@ -18,10 +15,14 @@ class MainActivity : BaseActivity() {
             ?.getViewMvcFactory()
             ?.newInstance(
                 MainActivityMvcView::class.java,
-                null)
+                null
+            )
 
         controller = getControllerCompositionRoot()
             ?.getMainActivityController()
+        controller!!.bindViewMvc(viewMvc!!)
+
+        lifecycle.addObserver(controller!!)
 
         setContentView(viewMvc?.getRootView())
 
