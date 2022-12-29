@@ -3,7 +3,7 @@ package de.r.gregat.graphhoppercoretest.screens.common
 import android.content.Context
 import android.view.View
 
-abstract class BaseViewMvc: ViewMvc {
+abstract class BaseViewMvc : ViewMvc {
     private lateinit var rootView: View
 
     override fun getRootView(): View {

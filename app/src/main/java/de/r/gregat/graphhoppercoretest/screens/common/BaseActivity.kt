@@ -6,7 +6,7 @@ import de.r.gregat.graphhoppercoretest.di.ActivityCompositionRoot
 import de.r.gregat.graphhoppercoretest.di.ControllerCompositionRoot
 
 
-open class BaseActivity: AppCompatActivity() {
+open class BaseActivity : AppCompatActivity() {
     private var activityCompositionRoot: ActivityCompositionRoot? = null
     private var controllerCompositionRoot: ControllerCompositionRoot? = null
 

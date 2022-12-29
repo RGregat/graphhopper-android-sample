@@ -8,14 +8,14 @@ class CompositionRoot {
     private var uiThreadHelper: UiThreadHelper? = null
 
     fun getBackgroundThreadHelper(): BackgroundThreadHelper {
-        if(backgroundThreadHelper == null) {
+        if (backgroundThreadHelper == null) {
             backgroundThreadHelper = BackgroundThreadHelper()
         }
         return backgroundThreadHelper!!
     }
 
     fun getUiThreadHelper(): UiThreadHelper {
-        if(uiThreadHelper == null) {
+        if (uiThreadHelper == null) {
             uiThreadHelper = UiThreadHelper()
         }
         return uiThreadHelper!!

@@ -2,7 +2,8 @@ package de.r.gregat.graphhoppercoretest.screens.common
 
 import java.util.*
 
-abstract class BaseObservableViewMvc<ListenerType>: BaseViewMvc(), ObservableViewMvc<ListenerType> {
+abstract class BaseObservableViewMvc<ListenerType> : BaseViewMvc(),
+    ObservableViewMvc<ListenerType> {
 
     private var listeners: MutableSet<ListenerType> = mutableSetOf()
 

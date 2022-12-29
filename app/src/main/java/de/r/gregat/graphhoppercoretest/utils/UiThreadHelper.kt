@@ -4,8 +4,6 @@ import android.os.Handler
 import android.os.Looper
 
 
-
-
 class UiThreadHelper {
     private val uiHandler: Handler = getMainHandler()
 
