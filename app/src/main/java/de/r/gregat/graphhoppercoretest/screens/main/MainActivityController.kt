@@ -3,9 +3,13 @@ package de.r.gregat.graphhoppercoretest.screens.main
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
+import com.graphhopper.GHRequest
+import com.graphhopper.GHResponse
 import com.graphhopper.GraphHopper
 import com.graphhopper.config.CHProfile
 import com.graphhopper.config.Profile
+import com.graphhopper.util.InstructionList
+import com.graphhopper.util.Translation
 import de.r.gregat.graphhoppercoretest.utils.BackgroundThreadHelper
 import de.r.gregat.graphhoppercoretest.utils.UiThreadHelper
 import de.r.gregat.graphhoppercoretest.utils.io.FileSelectionEntryPoint
@@ -17,7 +21,9 @@ import java.io.FileInputStream
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.nio.file.StandardCopyOption
+import java.util.*
 import kotlin.io.path.absolutePathString
+
 
 class MainActivityController(
     private val fragmentActivity: FragmentActivity,
@@ -112,5 +118,63 @@ class MainActivityController(
             }
         }
 
+    }
+
+    override fun startRouting() {
+        viewMvc.startRoutingProcess()
+
+        backgroundThreadHelper.post {
+
+            try {
+                val req = GHRequest(
+                    52.506532501639114,
+                    13.416267775403348,
+                    52.544940065357245,
+                    13.354310290455304
+                )
+                    .setProfile("car")
+                    .setLocale(Locale.GERMANY)
+
+                val rsp: GHResponse = graphHopper.route(req)
+
+                // handle errors
+
+                // handle errors
+                if (rsp.hasErrors()) throw RuntimeException(rsp.errors.toString())
+
+                // use the best path, see the GHResponse class for more possibilities.
+
+                // use the best path, see the GHResponse class for more possibilities.
+                val path = rsp.best
+
+                // points, distance in meters and time in millis of the full path
+
+                // points, distance in meters and time in millis of the full path
+                val pointList = path.points
+                val distance = path.distance
+                val timeInMs = path.time
+
+                uiThreadHelper.post {
+                    viewMvc.setRoutingResult(distance, timeInMs)
+                }
+
+
+                val tr: Translation = graphHopper.translationMap.getWithFallBack(Locale.UK)
+                val il: InstructionList = path.instructions
+                // iterate over all turn instructions
+                // iterate over all turn instructions
+                for (instruction in il) {
+                    // System.out.println("distance " + instruction.getDistance() + " for instruction: " + instruction.getTurnDescription(tr));
+                }
+            } catch (_: java.lang.RuntimeException) {
+
+            } finally {
+                uiThreadHelper.post {
+                    viewMvc.startRoutingProcessDone()
+                }
+            }
+
+
+        }
     }
 }

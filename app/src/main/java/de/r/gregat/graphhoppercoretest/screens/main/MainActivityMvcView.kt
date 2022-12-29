@@ -12,9 +12,17 @@ interface MainActivityMvcView: ObservableViewMvc<MainActivityMvcView.EventListen
 
     fun createGraphhopperInstanceDone()
 
+    fun startRoutingProcess()
+
+    fun startRoutingProcessDone()
+
+    fun setRoutingResult(distance: Double, time: Long)
+
     interface EventListener {
         fun selectPbf()
 
         fun createGraphhopperInstance()
+
+        fun startRouting()
     }
 }
