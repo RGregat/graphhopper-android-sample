@@ -29,4 +29,12 @@ class MainActivityMvcViewImpl(
             }
         }
     }
+
+    override fun startCopyProcess() {
+        binding.tvFileCopyProcessAnnotation.text = "Copy selected PBF File to external App Storage..."
+    }
+
+    override fun copyProcessDone() {
+        binding.tvFileCopyProcessAnnotation.text = "PBF File successfully copied to external App Storage."
+    }
 }

@@ -25,6 +25,5 @@ class MainActivity : BaseActivity() {
         lifecycle.addObserver(controller!!)
 
         setContentView(viewMvc?.getRootView())
-
     }
 }

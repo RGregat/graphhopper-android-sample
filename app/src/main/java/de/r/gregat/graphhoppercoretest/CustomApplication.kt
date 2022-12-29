@@ -5,6 +5,7 @@ import de.r.gregat.graphhoppercoretest.di.CompositionRoot
 
 
 class CustomApplication : Application() {
+
     private var compositionRoot: CompositionRoot? = null
 
     override fun onCreate() {
