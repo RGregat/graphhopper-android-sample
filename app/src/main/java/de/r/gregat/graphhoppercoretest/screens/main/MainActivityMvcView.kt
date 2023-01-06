@@ -1,5 +1,6 @@
 package de.r.gregat.graphhoppercoretest.screens.main
 
+import com.graphhopper.util.PointList
 import de.r.gregat.graphhoppercoretest.screens.common.ObservableViewMvc
 
 interface MainActivityMvcView: ObservableViewMvc<MainActivityMvcView.EventListener> {
@@ -17,6 +18,14 @@ interface MainActivityMvcView: ObservableViewMvc<MainActivityMvcView.EventListen
     fun startRoutingProcessDone()
 
     fun setRoutingResult(distance: Double, time: Long)
+
+    fun setInstructionList(instructionList: List<String>)
+
+    fun setGeoPoints(pointList: PointList)
+
+    fun onResume()
+
+    fun onPause()
 
     interface EventListener {
         fun selectPbf()

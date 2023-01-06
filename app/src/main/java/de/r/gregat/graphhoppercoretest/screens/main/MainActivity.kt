@@ -1,6 +1,7 @@
 package de.r.gregat.graphhoppercoretest.screens.main
 
 import android.os.Bundle
+import android.preference.PreferenceManager
 import de.r.gregat.graphhoppercoretest.screens.common.BaseActivity
 
 class MainActivity : BaseActivity() {

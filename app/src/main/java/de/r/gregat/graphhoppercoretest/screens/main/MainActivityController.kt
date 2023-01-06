@@ -7,9 +7,14 @@ import com.graphhopper.GHRequest
 import com.graphhopper.GHResponse
 import com.graphhopper.GraphHopper
 import com.graphhopper.config.CHProfile
+import com.graphhopper.config.LMProfile
 import com.graphhopper.config.Profile
+import com.graphhopper.json.Statement
+import com.graphhopper.routing.weighting.custom.CustomProfile
+import com.graphhopper.util.CustomModel
 import com.graphhopper.util.InstructionList
 import com.graphhopper.util.Translation
+import com.graphhopper.util.shapes.GHPoint
 import de.r.gregat.graphhoppercoretest.utils.BackgroundThreadHelper
 import de.r.gregat.graphhoppercoretest.utils.UiThreadHelper
 import de.r.gregat.graphhoppercoretest.utils.io.FileSelectionEntryPoint
@@ -22,6 +27,7 @@ import java.nio.file.Files
 import java.nio.file.Paths
 import java.nio.file.StandardCopyOption
 import java.util.*
+import java.util.stream.Collectors
 import kotlin.io.path.absolutePathString
 
 
@@ -48,6 +54,16 @@ class MainActivityController(
     override fun onStop(owner: LifecycleOwner) {
         super.onStop(owner)
         viewMvc.unregisterListener(this)
+    }
+
+    override fun onResume(owner: LifecycleOwner) {
+        super.onResume(owner)
+        viewMvc.onResume()
+    }
+
+    override fun onPause(owner: LifecycleOwner) {
+        super.onPause(owner)
+        viewMvc.onPause()
     }
 
     override val fileSelectionOwner: FragmentActivity
@@ -156,6 +172,7 @@ class MainActivityController(
 
                 uiThreadHelper.post {
                     viewMvc.setRoutingResult(distance, timeInMs)
+                    viewMvc.setGeoPoints(pointList)
                 }
 
 
@@ -163,8 +180,13 @@ class MainActivityController(
                 val il: InstructionList = path.instructions
                 // iterate over all turn instructions
                 // iterate over all turn instructions
+                val processInstructionList = il
+                    .stream()
+                    .map { "distance " + it.getDistance() + " for instruction: " + it.getTurnDescription(tr) }
+                    .collect(Collectors.toList())
+                viewMvc.setInstructionList(processInstructionList)
                 for (instruction in il) {
-                    // System.out.println("distance " + instruction.getDistance() + " for instruction: " + instruction.getTurnDescription(tr));
+                    System.out.println("distance " + instruction.getDistance() + " for instruction: " + instruction.getTurnDescription(tr));
                 }
             } catch (_: java.lang.RuntimeException) {
 
@@ -173,8 +195,6 @@ class MainActivityController(
                     viewMvc.startRoutingProcessDone()
                 }
             }
-
-
         }
     }
 }

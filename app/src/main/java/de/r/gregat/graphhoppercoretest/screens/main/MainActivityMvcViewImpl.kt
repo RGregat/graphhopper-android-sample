@@ -1,9 +1,20 @@
 package de.r.gregat.graphhoppercoretest.screens.main
 
+import android.preference.PreferenceManager
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import android.widget.Button
+import com.graphhopper.util.PointList
+import de.r.gregat.graphhoppercoretest.R
 import de.r.gregat.graphhoppercoretest.databinding.ActivityMainBinding
 import de.r.gregat.graphhoppercoretest.screens.common.BaseObservableViewMvc
+import org.osmdroid.config.Configuration
+import org.osmdroid.tileprovider.tilesource.TileSourceFactory
+import org.osmdroid.util.GeoPoint
+import org.osmdroid.views.overlay.Polyline
+import org.osmdroid.views.overlay.gestures.RotationGestureOverlay
+import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
+import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
 
 
 class MainActivityMvcViewImpl(
@@ -11,6 +22,9 @@ class MainActivityMvcViewImpl(
     private val container: ViewGroup?
 ) :
     BaseObservableViewMvc<MainActivityMvcView.EventListener>(), MainActivityMvcView {
+
+    private val locationOverlay: MyLocationNewOverlay
+    private val rotationGestureOverlay: RotationGestureOverlay
 
     private val binding: ActivityMainBinding = ActivityMainBinding
         .inflate(
@@ -21,12 +35,28 @@ class MainActivityMvcViewImpl(
 
 
     init {
+        Configuration.getInstance().load(binding.root.context, PreferenceManager.getDefaultSharedPreferences(binding.root.context))
+
         setRootView(binding.root)
+
+        binding.map.setTileSource(TileSourceFactory.MAPNIK)
+        binding.map.controller.setZoom(9.5)
+        val startPoint = GeoPoint(52.0, 13.2)
+        binding.map.controller.setCenter(startPoint)
+
+        locationOverlay = MyLocationNewOverlay(GpsMyLocationProvider(binding.root.context), binding.map)
+        locationOverlay.enableMyLocation()
+        binding.map.overlays.add(locationOverlay)
+
+        rotationGestureOverlay = RotationGestureOverlay(binding.map)
+        rotationGestureOverlay.isEnabled
+        binding.map.setMultiTouchControls(true)
+        binding.map.overlays.add(rotationGestureOverlay)
     }
 
     init {
-        binding.tvStartLocation.text = "52.506532501639114, 13.416267775403348"
-        binding.tvDestinationLocation.text = "52.544940065357245, 13.354310290455304"
+        /*binding.tvStartLocation.text = "52.506532501639114, 13.416267775403348"
+        binding.tvDestinationLocation.text = "52.544940065357245, 13.354310290455304"*/
     }
 
     init {
@@ -79,7 +109,38 @@ class MainActivityMvcViewImpl(
     }
 
     override fun setRoutingResult(distance: Double, time: Long) {
-        binding.tvDistanceInM.text = String.format("%f m", distance)
-        binding.tvTimeInMS.text = String.format("%d ms", time)
+        /*binding.tvDistanceInM.text = String.format("%f m", distance)
+        binding.tvTimeInMS.text = String.format("%d ms", time)*/
+    }
+
+    override fun setInstructionList(instructionList: List<String>) {
+        val singleInstructionString = instructionList.joinToString {
+            "$it\r\n"
+        }
+
+        /*binding.tvInstruction.text = singleInstructionString*/
+    }
+
+    override fun setGeoPoints(pointList: PointList) {
+        val geoPointList: MutableList<GeoPoint> = mutableListOf()
+
+        pointList.forEach {
+            geoPointList.add(GeoPoint(it.lat, it.lon, it.ele))
+        }
+
+        val line = Polyline();   //see note below!
+        line.setPoints(geoPointList);
+
+        binding.map.overlays.add(line)
+    }
+
+    override fun onResume() {
+        binding.map.onResume()
+        locationOverlay.enableMyLocation()
+    }
+
+    override fun onPause() {
+        binding.map.onPause()
+        locationOverlay.disableMyLocation()
     }
 }
