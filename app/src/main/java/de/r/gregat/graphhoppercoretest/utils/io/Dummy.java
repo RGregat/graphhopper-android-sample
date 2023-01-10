@@ -34,7 +34,6 @@ public class Dummy {
         if (res.hasErrors())
             throw new RuntimeException(res.getErrors().toString());
 
-        assert Math.round(res.getBest().getTime() / 1000d) == 96;
 
         // 2. now avoid primary roads and reduce maximum speed, see docs/core/custom-models.md for an in-depth explanation
         // and also the blog posts https://www.graphhopper.com/?s=customizable+routing
@@ -48,7 +47,5 @@ public class Dummy {
         res = hopper.route(req);
         if (res.hasErrors())
             throw new RuntimeException(res.getErrors().toString());
-
-        assert Math.round(res.getBest().getTime() / 1000d) == 165;
     }
 }

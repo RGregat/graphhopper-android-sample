@@ -14,3 +14,9 @@ dependencyResolutionManagement {
 }
 rootProject.name = "Graphhopper Core Test"
 include ':app'
+
+include ':graphhopper-core'
+include ':graphhopper-web-api'
+project(':graphhopper-core').projectDir = new File(rootDir, 'graphhopper/core')
+project(':graphhopper-web-api').projectDir = new File(rootDir, 'graphhopper/web-api')
+
