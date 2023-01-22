@@ -7,17 +7,23 @@ import androidx.lifecycle.LifecycleOwner
 import com.graphhopper.GHRequest
 import com.graphhopper.GHResponse
 import com.graphhopper.GraphHopper
-import com.graphhopper.config.CHProfile
+import com.graphhopper.GraphHopperConfig
 import com.graphhopper.config.LMProfile
 import com.graphhopper.config.Profile
 import com.graphhopper.json.Statement
 import com.graphhopper.json.Statement.If
+import com.graphhopper.routing.DefaultWeightingFactory
+import com.graphhopper.routing.WeightingFactory
+import com.graphhopper.routing.ev.TurnCost
+import com.graphhopper.routing.ev.VehicleAccess
+import com.graphhopper.routing.ev.VehiclePriority
+import com.graphhopper.routing.ev.VehicleSpeed
+import com.graphhopper.routing.weighting.DefaultTurnCostProvider
+import com.graphhopper.routing.weighting.TurnCostProvider
+import com.graphhopper.routing.weighting.Weighting
 import com.graphhopper.routing.weighting.custom.CustomProfile
-import com.graphhopper.routing.weighting.custom.CustomWeightingHelper
-import com.graphhopper.util.CustomModel
-import com.graphhopper.util.InstructionList
-import com.graphhopper.util.Parameters
-import com.graphhopper.util.Translation
+import com.graphhopper.routing.weighting.custom.CustomWeighting
+import com.graphhopper.util.*
 import de.r.gregat.graphhoppercoretest.utils.BackgroundThreadHelper
 import de.r.gregat.graphhoppercoretest.utils.UiThreadHelper
 import de.r.gregat.graphhoppercoretest.utils.io.FileSelectionEntryPoint
@@ -31,7 +37,6 @@ import java.nio.file.Files
 import java.nio.file.Paths
 import java.nio.file.StandardCopyOption
 import java.util.*
-import java.util.logging.Logger
 import java.util.stream.Collectors
 import kotlin.io.path.absolutePathString
 
@@ -45,7 +50,94 @@ class MainActivityController(
     FileSelectionEntryPoint {
 
     private lateinit var viewMvc: MainActivityMvcView
-    private lateinit var graphHopper: GraphHopper
+    /*private lateinit var graphHopper: GraphHopper*/
+
+    val graphHopper: GraphHopper = object : GraphHopper() {
+        override fun createWeightingFactory(): WeightingFactory {
+            return object : DefaultWeightingFactory(baseGraph, encodingManager) {
+                override fun createWeighting(
+                    profile: Profile,
+                    hints: PMap,
+                    disableTurnCosts: Boolean
+                ): Weighting {
+                    if("custom" == profile.weighting) {
+                        val vehicle = profile.vehicle
+                        val accessEnc = encodingManager.getBooleanEncodedValue(VehicleAccess.key(vehicle))
+                        val speedEnc = encodingManager.getDecimalEncodedValue(VehicleSpeed.key(vehicle))
+                        val priorityEnc =
+                            if (encodingManager.hasEncodedValue(VehiclePriority.key(vehicle))) encodingManager.getDecimalEncodedValue(
+                                VehiclePriority.key(vehicle)
+                            ) else null
+
+                        val customModel = CustomModel()
+                            .addToPriority(If("road_class == STEPS", Statement.Op.MULTIPLY, "0.0"))
+                            .addToPriority(If("road_class == FOOTWAY", Statement.Op.MULTIPLY, "0.5"))
+                            .addToPriority(If("surface == DIRT", Statement.Op.MULTIPLY, "0.0"))
+                            .addToPriority(If("surface == SAND", Statement.Op.MULTIPLY, "0.0"))
+                            .addToPriority(If("surface == PAVED", Statement.Op.MULTIPLY, "1.0"))
+                            .addToPriority(If("average_slope >= 5", Statement.Op.MULTIPLY, "0.1"))
+                            .setDistanceInfluence(69.0)
+                            .setHeadingPenalty(22.0)
+
+                        val prio = JaninoCustomWeightingHelperSubclass2()
+
+                        prio.init(encodingManager, speedEnc, priorityEnc, customModel.areas)
+
+                        val parameters: CustomWeighting.Parameters = CustomWeighting.Parameters(
+                            { edge: EdgeIteratorState?, reverse: Boolean ->
+                                prio.getSpeed(
+                                    edge,
+                                    reverse
+                                )
+                            },
+                            { edge: EdgeIteratorState?, reverse: Boolean ->
+                                prio.getPriority(
+                                    edge,
+                                    reverse
+                                )
+                            },
+                            prio.maxSpeedPublic,
+                            prio.maxPriorityPublic,
+                            customModel.distanceInfluence,
+                            customModel.headingPenalty)
+
+
+                        val turnCostProvider: TurnCostProvider = if (profile.isTurnCosts && !disableTurnCosts) {
+                            val turnCostEnc = encodingManager.getDecimalEncodedValue(TurnCost.key(vehicle))
+                                ?: throw IllegalArgumentException("Vehicle $vehicle does not support turn costs")
+                            val uTurnCosts =
+                                hints.getInt(Parameters.Routing.U_TURN_COSTS, Weighting.INFINITE_U_TURN_COSTS)
+                            DefaultTurnCostProvider(turnCostEnc, baseGraph.turnCostStorage, uTurnCosts)
+                        } else {
+                            TurnCostProvider.NO_TURN_COST_PROVIDER
+                        }
+
+
+                        return CustomWeighting(accessEnc, speedEnc, turnCostProvider, parameters)
+                    }
+                    return super.createWeighting(profile, hints, disableTurnCosts)
+                }
+            }
+        }
+    }.apply {
+        val externalAppStorageRoot = fragmentActivity.getExternalFilesDir(null)
+        val graphopperCacheFolder = File(externalAppStorageRoot, "graphhopper")
+
+        val config = GraphHopperConfig()
+            .putObject("graph.vehicles", "bike,car,foot,wheelchair,roads")
+            .putObject("prepare.min_network_size", 200)
+            .putObject("graph.location", graphopperCacheFolder.getAbsolutePath())
+            .putObject(
+                "graph.encoded_values",
+                "max_slope,road_class,road_class_link,road_environment,max_speed,road_access,track_type,surface,average_slope"
+            )
+            .putObject(
+                "custom_model_folder",
+                "./src/test/resources/com/graphhopper/application/resources"
+            )
+            .putObject("import.osm.ignored_highways", "")
+        init(config)
+    }
 
     fun bindViewMvc(view: MainActivityMvcView) {
         this.viewMvc = view
@@ -110,7 +202,29 @@ class MainActivityController(
 
         backgroundThreadHelper.post {
             try {
-                graphHopper = GraphHopper()
+                /*graphHopper = GraphHopper().apply {
+
+                }*/
+
+                /*val graphHopper: GraphHopper = object : GraphHopper() {
+                    override fun createWeightingFactory(): WeightingFactory? {
+                        return object : CustomWeightingFactory() {
+                            fun createWeighting(
+                                profile: Profile,
+                                requestHints: PMap?,
+                                disableTurnCosts: Boolean
+                            ): Weighting? {
+                                return if ("custom" == profile.weighting) myWeighting else super.createWeighting(
+                                    profile,
+                                    requestHints,
+                                    disableTurnCosts
+                                )
+                            }
+                        }
+                    }
+                }*/
+
+
 
                 val externalAppStorageRoot = fragmentActivity.getExternalFilesDir(null)
                 val graphopperCacheFolder = File(externalAppStorageRoot, "graphhopper")
@@ -141,24 +255,44 @@ class MainActivityController(
         val graphopperCacheFolder = File(externalAppStorageRoot, "graphhopper")
         val path = Paths.get(externalAppStorageRoot?.path, "custom_profile.json")*/
 
+        /*val customModel = CustomModel()
+            .addToPriority(If("road_class == TERTIARY", Statement.Op.MULTIPLY, "1.0"))
+            .addToPriority(If("road_class == PRIMARY", Statement.Op.MULTIPLY, "0.1"))
+            .addToSpeed(If("road_class == PRIMARY", Statement.Op.LIMIT, "28"))
+            .setDistanceInfluence(69.0)
+            .setHeadingPenalty(22.0)
+
+        val profile = Profile("car")
+            .setVehicle("car")
+            .setWeighting("fastest")
+            .setTurnCosts(false)
+
+        profile.hints.putObject(CustomModel.KEY, customModel)*/
+
 
         graphHopper.setProfiles(
-            Profile("car")
+            /*Profile("car")
                 .setVehicle("car")
                 .setWeighting("fastest")
-                .setTurnCosts(false),
-            CustomProfile("my_car_profile")
+                .setTurnCosts(false),*/
+            CustomProfile("custom_foot")
                 .setCustomModel(CustomModel()
-                    .addToPriority(If("road_class == PRIMARY", Statement.Op.MULTIPLY, "0.5"))
-                    .addToSpeed(If("road_class == PRIMARY", Statement.Op.LIMIT, "28"))
+                    .addToPriority(If("road_class == STEPS", Statement.Op.MULTIPLY, "0.0"))
+                    .addToPriority(If("road_class == FOOTWAY", Statement.Op.MULTIPLY, "0.5"))
+                    .addToPriority(If("surface == DIRT", Statement.Op.MULTIPLY, "0.0"))
+                    .addToPriority(If("surface == SAND", Statement.Op.MULTIPLY, "0.0"))
+                    .addToPriority(If("surface == PAVED", Statement.Op.MULTIPLY, "1.0"))
+                    .addToPriority(If("average_slope >= 5", Statement.Op.MULTIPLY, "0.1"))
                     .setDistanceInfluence(69.0)
                     .setHeadingPenalty(22.0)
                 )
-                .setVehicle("car")
+                .setVehicle("foot")
                 .setWeighting("custom")
+                .setTurnCosts(false)
+        //profile
         )
 
-        //graphHopper.lmPreparationHandler.setLMProfiles(LMProfile("my_car_profile"));
+        graphHopper.lmPreparationHandler.setLMProfiles(LMProfile("custom_foot"));
         //graphHopper.chPreparationHandler.setCHProfiles(CHProfile("car"))
     }
 
@@ -200,8 +334,8 @@ class MainActivityController(
                     .collect(Collectors.toList())
                 viewMvc.setInstructionList(processInstructionList)
 
-            } catch (_: java.lang.RuntimeException) {
-
+            } catch (e: java.lang.RuntimeException) {
+                Log.d("Graphhopper-Core-Test", e.stackTraceToString())
             } finally {
                 uiThreadHelper.post {
                     viewMvc.startRoutingProcessDone()
@@ -231,7 +365,7 @@ class MainActivityController(
             52.544940065357245,
             13.354310290455304
         )
-            .setProfile("my_car_profile")
+            .setProfile("custom_foot")
             .setLocale(Locale.GERMANY)
             .putHint(Parameters.CH.DISABLE, true)
 
@@ -242,14 +376,15 @@ class MainActivityController(
         //model.addToPriority(Statement.If("road_class == PRIMARY", Statement.Op.MULTIPLY, "0.5"))
         //model.addToPriority(Statement.If("true", Statement.Op.LIMIT, "100"))
 
-        /*val customModel: CustomModel = CustomModel()
-            .addToSpeed(Statement.If("road_class == MOTORWAY", Statement.Op.LIMIT, "80"))
-            .addToPriority(Statement.If("surface == DIRT", Statement.Op.MULTIPLY, "0.7"))
-            .addToPriority(Statement.If("surface == SAND", Statement.Op.MULTIPLY, "0.6"))
+        /*val customModel = CustomModel()
+            .addToPriority(Statement.If("road_class == TERTIARY", Statement.Op.MULTIPLY, "1.0"))
+            .addToPriority(Statement.If("road_class == PRIMARY", Statement.Op.MULTIPLY, "0.0"))
+            .addToSpeed(Statement.If("road_class == PRIMARY", Statement.Op.LIMIT, "50"))
+            .addToSpeed(Statement.If("road_class == TERTIARY", Statement.Op.LIMIT, "30"))
             .setDistanceInfluence(69.0)
-            .setHeadingPenalty(22.0)*/
+            .setHeadingPenalty(22.0)
 
-        //req.customModel = model
+        req.customModel = customModel*/
 
         return req
     }

@@ -22,7 +22,7 @@ import com.graphhopper.util.EdgeIteratorState
 import com.graphhopper.util.PMap
 import com.graphhopper.util.Parameters
 
-class CustomWeightingFactory(
+open class CustomWeightingFactory(
     private val graph: BaseGraph,
     private val encodingManager: EncodingManager
 ) : WeightingFactory {
@@ -40,7 +40,8 @@ class CustomWeightingFactory(
             ) else null
 
         val customModel = CustomModel()
-            .addToPriority(Statement.If("road_class == PRIMARY", Statement.Op.MULTIPLY, "0.5"))
+            .addToPriority(Statement.If("road_class == TERTIARY", Statement.Op.MULTIPLY, "1.0"))
+            .addToPriority(Statement.If("road_class == PRIMARY", Statement.Op.MULTIPLY, "0.1"))
             .addToSpeed(Statement.If("road_class == PRIMARY", Statement.Op.LIMIT, "28"))
             .setDistanceInfluence(69.0)
             .setHeadingPenalty(22.0)
