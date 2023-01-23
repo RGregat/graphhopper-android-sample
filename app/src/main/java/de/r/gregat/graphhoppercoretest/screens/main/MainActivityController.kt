@@ -50,7 +50,6 @@ class MainActivityController(
     FileSelectionEntryPoint {
 
     private lateinit var viewMvc: MainActivityMvcView
-    /*private lateinit var graphHopper: GraphHopper*/
 
     val graphHopper: GraphHopper = object : GraphHopper() {
         override fun createWeightingFactory(): WeightingFactory {
@@ -202,30 +201,6 @@ class MainActivityController(
 
         backgroundThreadHelper.post {
             try {
-                /*graphHopper = GraphHopper().apply {
-
-                }*/
-
-                /*val graphHopper: GraphHopper = object : GraphHopper() {
-                    override fun createWeightingFactory(): WeightingFactory? {
-                        return object : CustomWeightingFactory() {
-                            fun createWeighting(
-                                profile: Profile,
-                                requestHints: PMap?,
-                                disableTurnCosts: Boolean
-                            ): Weighting? {
-                                return if ("custom" == profile.weighting) myWeighting else super.createWeighting(
-                                    profile,
-                                    requestHints,
-                                    disableTurnCosts
-                                )
-                            }
-                        }
-                    }
-                }*/
-
-
-
                 val externalAppStorageRoot = fragmentActivity.getExternalFilesDir(null)
                 val graphopperCacheFolder = File(externalAppStorageRoot, "graphhopper")
                 val path = Paths.get(externalAppStorageRoot?.path, "osm.pbf")
@@ -250,25 +225,6 @@ class MainActivityController(
     }
 
     private fun setProfiles() {
-        // new CustomProfile("bus").setVehicle("roads").putHint("custom_model_file", "bus.json"),
-        /*val externalAppStorageRoot = fragmentActivity.getExternalFilesDir(null)
-        val graphopperCacheFolder = File(externalAppStorageRoot, "graphhopper")
-        val path = Paths.get(externalAppStorageRoot?.path, "custom_profile.json")*/
-
-        /*val customModel = CustomModel()
-            .addToPriority(If("road_class == TERTIARY", Statement.Op.MULTIPLY, "1.0"))
-            .addToPriority(If("road_class == PRIMARY", Statement.Op.MULTIPLY, "0.1"))
-            .addToSpeed(If("road_class == PRIMARY", Statement.Op.LIMIT, "28"))
-            .setDistanceInfluence(69.0)
-            .setHeadingPenalty(22.0)
-
-        val profile = Profile("car")
-            .setVehicle("car")
-            .setWeighting("fastest")
-            .setTurnCosts(false)
-
-        profile.hints.putObject(CustomModel.KEY, customModel)*/
-
 
         graphHopper.setProfiles(
             /*Profile("car")
@@ -289,7 +245,6 @@ class MainActivityController(
                 .setVehicle("foot")
                 .setWeighting("custom")
                 .setTurnCosts(false)
-        //profile
         )
 
         graphHopper.lmPreparationHandler.setLMProfiles(LMProfile("custom_foot"));
