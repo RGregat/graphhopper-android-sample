@@ -29,7 +29,7 @@ import de.r.gregat.graphhoppercoretest.utils.UiThreadHelper
 import de.r.gregat.graphhoppercoretest.utils.io.FileSelectionEntryPoint
 import de.r.gregat.graphhoppercoretest.utils.io.SelectFileParams
 import de.r.gregat.graphhoppercoretest.utils.io.StorageAccessFrameworkInteractor
-import de.r.gregat.graphhoppercoretest.utils.weighting.JaninoCustomWeightingHelperSubclass2
+import de.r.gregat.graphhoppercoretest.utils.weighting.JaninoCustomWeightingHelperSubclass5
 import java.io.File
 import java.io.FileDescriptor
 import java.io.FileInputStream
@@ -99,7 +99,7 @@ class MainActivityController(
                             .setDistanceInfluence(69.0)
                             .setHeadingPenalty(22.0)
 
-                        val prio = JaninoCustomWeightingHelperSubclass2()
+                        val prio = JaninoCustomWeightingHelperSubclass5()
 
                         prio.init(encodingManager, speedEnc, priorityEnc, customModel.areas)
 
@@ -287,7 +287,7 @@ class MainActivityController(
                 .setTurnCosts(false)
         )
 
-        graphHopper.lmPreparationHandler.setLMProfiles(LMProfile("custom_foot"));
+        graphHopper.lmPreparationHandler.setLMProfiles(LMProfile("custom_bike"));
         //graphHopper.chPreparationHandler.setCHProfiles(CHProfile("car"))
     }
 
@@ -360,7 +360,7 @@ class MainActivityController(
             52.544940065357245,
             13.354310290455304
         )
-            .setProfile("custom_foot")
+            .setProfile("custom_bike")
             .setLocale(Locale.GERMANY)
             .putHint(Parameters.CH.DISABLE, true)
 
