@@ -46,7 +46,7 @@ open class CustomWeightingFactory(
             .setDistanceInfluence(69.0)
             .setHeadingPenalty(22.0)
 
-        val prio = JaninoCustomWeightingHelperSubclass2()
+        val prio = JaninoCustomWeightingHelperSubclass5()
 
         prio.init(encodingManager, speedEnc, priorityEnc, customModel.areas)
 
